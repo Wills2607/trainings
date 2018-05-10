@@ -6,3 +6,11 @@ my_contacts:
   James:
    name: James
    mobile: 123-2134-1344
+other_contacts:
+  William1:
+   name: william Robert C 2
+   mobile: 9884484504
+
+  James1:
+   name: James  2
+   mobile: 123-2134-1344

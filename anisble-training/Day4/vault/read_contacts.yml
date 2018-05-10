@@ -1,0 +1,9 @@
+- name: Demonstrates ansible-vault usage in playbooks
+  hosts: localhost
+  vars_files:
+   - contacts
+
+  tasks:
+   - name: print the contacts
+     debug: msg="Mobile number of {{item.value.name}} is {{item.value.mobile}}"
+     with_dict: "{{my_contacts}}"
