@@ -1,0 +1,879 @@
+
+Day-1
+=====
+
+https://career.guru99.com/top-50-linux-interview-questions/
+http://people.sabanciuniv.edu/osman/linux/linux-faq.pdf
+
+Applications type Technogly(Kernel API)
+
+1. Namespaces
+2. CGroups
+
+#docker --version
+#docker images
+#docker run hello-world
+#docker ps
+  List out the running container 
+
+#docker ps -a
+ list out the all the container  with status
+
+#docker run -it ubuntu /bin/bash
+
+run interactive container 
+
+#docker run -it --name ubuntu1 ubuntu /bin/bash
+name it for the container 
+
+#docker rename ubuntu1 servers1
+
+#docker stop server1
+   stop the container 
+
+#docker start server1
+  start the container 
+
+#docker ps
+
+#docker exec -it server1 bash
+   get in the docker container 
+
+#docker attach  server1
+   i need to go for the root-shell but it will stop the container 
+
+#docker rm server1
+  remove the container 
+#docker run -dit ubuntu bash
+fd7fe8c22ac3f9509fe1c9f08fc03cbce3789c8ba91558c8adb15ed387c965ff
+
+#docker ps -a
+#docker ps -aq
+#docker stop $(docker ps -q)
+#docker rm  $(docker ps -aq)
+
+#docker history ubuntu
+#docker inspect ubuntu
+   (see the image layers )
+   
+    Sample Dockerfile:-
+   FROM ubuntu:16:04
+   MAINTAINER William
+   RUN apt -y install default-jdk
+   RUN apt -y install maven
+   CMD ["/bin/bash"]
+   
+#docker stats server1
+
+#docker rmi hello-world 
+  Delete the images 
+
+
+#docker pull nginx 
+  Pull the nginx iamges
+
+ #docker image  inspect nginx
+ 
+ https://hub.docker.com/_/nginx/
+https://docs.docker.com/install/linux/docker-ce/centos/#install-docker-ce
+#yum install -y yum-utils \
+  device-mapper-persistent-data \
+  lvm2
+  
+  #yum-config-manager \
+    --add-repo \
+    https://download.docker.com/linux/centos/docker-ce.repo
+	
+	#yum-config-manager --enable docker-ce-edge
+	#yum-config-manager --enable docker-ce-test
+	#um-config-manager --disable docker-ce-edge
+  
+ 
+ # docker run -d --name nginex1 nginx
+ 
+ #docker inspect nginex1 | grep IPA (see the ipaddress of contionner)
+ #docker inspect -f {{.NetworkSettings.IPAddress}}  nginex1
+ #docker run -d --name server1 -p 8000:80 nginx
+
+ http://192.168.20.59:8000
+ 
+ 
+ Volume mounting:-
+ 
+ #docker run -d --name server1 -p 8000:80 -v /tmp/data:/root/data nginx
+   
+   /root/data - image volume 
+   /tmp/data - Local host volulme
+
+<<<< Docker for Custom Docker Images >>>>
+   FROM ubuntu:16.04
+   MAINTAINER William Robert C <wills2707@gmail.com>
+   
+   #ENV http_proxy http://proxy.sac.verizon.com:80
+   #ENV https_proxy http://proxy.sac.verizon.com:80
+   RUN apt-get -y update && apt-get -y install tree
+ 
+Build image  
+ # docker build -t verizon/myimage .
+ # docker images
+ # docker run -it verizon/myimage tree /
+ 
+ Ansible :--
+=========
+ https://github.com/tektutor/ubuntu-ansible
+ 
+ #git clone https://github.com/tektutor/ubuntu-ansible.git
+ 
+ #ssh-keygen
+ 
+ #cp /root/.ssh/id_rsa.pub  authorized_keys
+ 
+>>>>>Dockerfile for new Ansible images<<<<<
+
+FROM ubuntu:16.04
+
+MAINTAINER william Robert <wills2607@gmail.com>
+
+RUN apt-get update && apt-get install -y openssh-server && apt-get install -y python-minimal
+RUN mkdir /var/run/sshd
+RUN echo 'root:root' | chpasswd
+#RUN echo 'jenkins:jenkins' | chpasswd
+RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
+
+# SSH login fix. Otherwise user is kicked off after login
+RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
+
+#ENV NOTVISIBLE "in users profile"
+#RUN echo "export VISIBLE=now" >> /etc/profile
+
+RUN mkdir -p /root/.ssh
+COPY authorized_keys /root/.ssh/authorized_keys
+
+EXPOSE 22
+EXPOSE 80
+CMD ["/usr/sbin/sshd", "-D"]
+
+>>>>>>>END <<<<<<
+
+Build the Ansible images 
+
+#docker build -t verizon/ansible-ubuntu .
+ 
+Create Ansible Node1
+#docker run -d --name ansible1 -p 2000:22 -p 8080:80  verizon/ansible-ubuntu
+#docker run -d --name ansible3 -p 2001:22 -p 8081:80  verizon/ansible-ubuntu
+
+login to the Ansible container 
+#ssh -p 2000 root@localhost
+  
+
+ Day -2
+ ======
+ 
+ Inventroy file --> hosts 
+ 
+ 1. Static Inventroy
+ 2. Dinamic Inventroy
+ 
+ 
+ In Ansible control machine:--
+ 
+ #yum install anisble 
+ 
+
+>> Edit/add host file
+ vi hosts
+# more hosts:
+server1  ansible_host=localhost ansible_port=2000 ansible_user=root ansible_private_key_file=/root/.ssh/id_rsa
+
+ 
+#ansible -i hosts all -m ping
+
+-i inventory file 
+all - all the invitory servers
+-m module 
+
+>>>>output<<<
+Day2]# ansible -i hosts all -m ping
+server1 | SUCCESS => {
+    "changed": false,
+    "ping": "pong"
+}
+
+Anisble indeguel commands:-
+
+# ansible -i hosts server1 -m ping (for indeguel machine)
+# ansible -i hosts server1 -m ping -vvvvv
+
+Ansible moules:-
+/usr/lib/python2.7/site-packages/ansible/modules/system
+
+*.py
+
+#ansible -i hosts server1 -m shell -a "ls -lr"
+#ansible -i hosts server1 -m shell -a "ls -lr /"
+#ansible -i hosts server1 -m shell -a "ls -lR /"
+
+Anisble help:-
+
+#anisble-doc -l
+#ansible-doc ping
+
+Ad-Hoc commands:-
+
+#ansible -i hosts all -m setup
+#ansible -i hosts all -m shell  -a "apt -y update && apt -y install net-tools"
+#ansible -i hosts all -m shell  -a "ifconfig -a"
+#ansible -i hosts all -m shell  -a "docker inspect -f {{.NetworkSettings.IPAddress}}  nginex1"
+
+
+========== Writing playbook ==========
+---
+
+- name: This playbook demonstrates use of ping module  
+  hosts: all
+  
+  tasks:
+   - name: Ping the remote docker container
+     ping: 
+
+...
+
+Run the play book
+# ansible-playbook -i hosts ping.yml
+
+>>>>>output <<<<<
+#Day2]# ansible-playbook -i hosts ping.yml
+
+PLAY [This playbook demonstrates use of ping module] ********************************************************************************************************
+
+TASK [Gathering Facts] **************************************************************************************************************************************
+ok: [server2]
+ok: [server1]
+
+TASK [Ping the remote docker container] *********************************************************************************************************************
+ok: [server2]
+ok: [server1]
+
+PLAY RECAP **************************************************************************************************************************************************
+server1                    : ok=2    changed=0    unreachable=0    failed=0
+server2                    : ok=2    changed=0    unreachable=0    failed=0
+
+
+
+# Day2]# more hosts
+[all]
+server1  ansible_host=localhost ansible_port=2000 ansible_user=root ansible_private_key_file=/root/.ssh/id_rsa
+server2  ansible_host=localhost ansible_port=2001 ansible_user=root ansible_private_key_file=/root/.ssh/id_rsa
+
+
+>>>>>>> <<<<<<<
+
+===== End =========
+
+ping-2.yml
+
+---
+
+- name: This playbook demonstrates use of ping module
+  hosts: all
+
+  tasks:
+   - name: Ping the remote docker container
+     ping:
+
+- name: This is the second play
+  hosts: server2
+
+  tasks:
+   - name: List the files in root folder
+     shell: "ls -lr /"
+
+...
+
+
+#ansible-playbook -i hosts ping-2.yml
+
+
+=========
+
+ ping-3.yml
+ 
+ ---
+
+- name: This playbook demonstrates use of ping module
+  hosts: all
+
+  tasks:
+   - name: Ping the remote docker container
+     ping:
+
+- name: This is the second play
+  hosts: server2
+
+  tasks:
+   - name: List the files in root folder
+     shell: "ls -lr /"
+     register: output
+
+   - name: Print the output of the list task
+     debug: var=output
+
+...
+
+#ansible-playbook -i hosts ping-3.yml
+
+==============
+
+Playbook -4
+
+install_tree_and_vimtools.yml
+
+- name: This playbook install vim and tree utilities 
+  hosts: all
+  gather_facts: no
+  
+  tasks:
+   - name: Install vim utility
+     apt: name=tree update_cache=yes state=latest
+	 
+
+#ansible-playbook -i hosts install_tree_and_vimtools.yml
+====
+
+#docker run -d --name ansible4  -p 2002:22 -p 8082:80  verizon/ansible-ubuntu
+
+Day2]# more hosts
+[all]
+server1  ansible_host=localhost ansible_port=2000 ansible_user=root ansible_private_key_file=/root/.ssh/id_rsa
+server2  ansible_host=localhost ansible_port=2001 ansible_user=root ansible_private_key_file=/root/.ssh/id_rsa
+server3  ansible_host=localhost ansible_port=2002 ansible_user=root ansible_private_key_file=/root/.ssh/id_rsa
+
+>>>>>ansible.cfg - File you can set your environment varible for your Ansbile enviormnets 
+
+Help for ansible.cfg - Read 
+vi /etc/ansible/ansible.cfg
+cp /etc/ansible/ansible.cfg ansible.cfg
+
+updated the below in ansible.cfg
+
+[defaults]
+inventory=hosts
+host_key_checking=False
+
+Run the playbook with out any options:-
+#ansible-playbook install_tree_and_vimtools.yml
+
+=====
+
+Playbook - 5
+
+- name: This playbook install vim and tree utilities
+  hosts: all
+  gather_facts: no
+  become: yes
+
+  tasks:
+   - name: Install vim utility
+     apt: name=vim update_cache=yes state=latest
+
+   - name: Install tree utility
+     apt: name=tree update_cache=yes state=latest
+
+	 
+>>>>>> Retry the playbook only missed changes in the servers
+	 
+#ansible-playbook install_tree_and_vimtools-2.yml  --limit @install_tree_and_vimtools-2.retry
+
+
+====
+
+Playbook - 6
+
+install_nginx.yml
+
+- name: This playbook installs and deploys web page into nginx webserver
+  hosts: all
+  gather_facts: no
+  become: yes
+
+  tasks:
+   - name: Install vim utility
+     apt: name=nginx update_cache=yes state=latest
+
+
+#ansible-playbook install_nginx.yml
+
+
+=====
+docker cp ansible1:/etc/nginx/nginx.conf .
+docker cp ansible1:/etc/nginx/sites-available/default  .
+
+
+Playbook -7
+
+
+- name: This playbook installs and deploys web page into nginx webserver
+  hosts: all
+  gather_facts: no
+  become: yes
+
+  tasks:
+   - name: Install nginx utility
+     apt: name=nginx update_cache=yes state=latest
+
+   - name: Configure nginx web root home
+     copy: src=default dest=/etc/nginx/sites-available/default
+
+   - name: Configure nginx settings
+     copy: src=nginx.conf dest=/etc/nginx/nginx.conf
+
+   - name: Configure nginx settings
+     copy: src=nginx.conf dest=/etc/nginx/nginx.conf
+
+   - name: Restart the nginx web server
+     service: name=nginx state=restarted
+
+   - name: Create the nginx web root home
+     shell: "mkdir -p /var/html":w
+
+   - name: Deploy web page
+     template: src=index.html.j2 dest=/var/html/index.html
+	 
+	 
+>>>Create index.html
+Day2]# more index.html
+<html>
+     <head>Welcome to DevOps!!!!<head>
+     <body>
+            <hl>Configurated by {{organization_name}}</h1>
+            <hl>Provisioned by {{provisioner_name}}</h1>
+            <hl>Automation by {{automation_name}}</h1>
+     </body>
+</html>
+
+#apt list --installed
+
+=== handlers and notify  =====
+
+playbook -8
+
+- name: This playbook installs and deploys web page into nginx webserver
+  hosts: all
+  gather_facts: no
+  become: yes
+  vars:
+   - organization_name: Verizon
+   - provisioner_name: Docker
+   - automation_name: Ansible
+
+  tasks:
+   - name: Install nginx utility
+     apt: name=nginx update_cache=yes state=latest
+     notify:
+      - Restart the nginx web server
+
+   - name: Configure nginx web root home
+     copy: src=default dest=/etc/nginx/sites-available/default
+     notify:
+      - Restart the nginx web server
+
+   - name: Configure nginx settings
+     copy: src=nginx.conf dest=/etc/nginx/nginx.conf
+     notify:
+      - Restart the nginx web server
+
+   - name: Configure nginx settings
+     copy: src=nginx.conf dest=/etc/nginx/nginx.conf
+     notify:
+      - Restart the nginx web server
+
+   - name: Create the nginx web root home
+     shell: "mkdir -p /var/html"
+     notify:
+      - Restart the nginx web server
+
+   - name: Deploy web page
+     template: src=index.html.j2 dest=/var/html/index.html
+
+  handlers:
+   - name: Restart the nginx web server
+     shell: "service nginx restart"
+
+	 
+# ansible-playbook  install_nginx.yml
+
+Day-3
+====
+
+https://github.com/tektutor/centos-sshd-passwordless
+
+
+Update the Dockerfile (mkdir  700)
+
+
+Dockerfile
+
+<<<<<<<<
+FROM centos:6.7
+MAINTAINER Jeganathan Swaminathan <jegan@tektutor.org> <http://www.tektutor.org>
+
+#RUN yum install -y openssh-server openssh-clients && yum install -y python-minimal
+RUN yum install -y openssh-server openssh-clients
+
+# Set the password of root user to root
+RUN echo 'root:root' | chpasswd
+
+RUN usermod -aG wheel root
+
+RUN sed -ri 's/^session\s+required\s+pam_loginuid.so$/session optional pam_loginuid.so/' /etc/pam.d/sshd
+
+# Disable root login &
+# Disable password login, only allow public key.
+COPY sshd_config /etc/ssh/sshd_config
+COPY sudoers /etc/sudoers
+
+RUN mkdir -p /root/.ssh
+COPY authorized_keys /root/.ssh/authorized_keys
+COPY authorized_keys /.ssh/authorized_keys
+COPY authorized_keys /etc/ssh/authorized_keys
+
+# Add sshd running directory.
+RUN mkdir -m 700 /var/run/sshd
+
+# Add ssh key directory.
+RUN /sbin/service sshd start && /sbin/service sshd stop
+
+EXPOSE 22
+EXPOSE 80
+CMD ["/usr/sbin/sshd", "-D"]
+
+>>>>>
+
+#docker build -t verizon/ansible-centos .
+
+#docker run -d --name centos1 -p 3000:22 -p 9000:80 verizon/ansible-centos
+#docker run -d --name centos2 -p 3001:22 -p 9001:80 verizon/ansible-centos
+
+hosts -File 
+
+[all]
+server1  ansible_port=2000
+server2  ansible_port=2001
+centos1  ansible_port=3000
+centos2  ansible_port=3001
+
+[all:vars]
+ansible_host=localhost
+ansible_user=root
+ansible_private_key_file=/root/.ssh/id_rsa
+ansible_become_user=root
+ansible_become_password=admin
+
+[centos]
+centos1
+centos2
+
+[ubuntu]
+server1
+server2
+
+>>>
+
+ansible.cfg - File
+ 
+[defaults]
+hostfile=hosts
+host_key_checking=False
+
+>>>>
+
+Playbook - 9
+
+install_nginx.yml
+
+ - name: This playbook installs, configures and deploys web page in nginx server
+  hosts: all
+  #gather_facts: no
+  vars:
+    - greet_message: "DevOps"
+    - provisoner_tool: "Docker"
+    - automation_tool: "Ansible"
+  tasks:
+   - name: Install nginx in Ubuntu server
+     apt: name=nginx update_cache=yes state=present
+     when: ( ansible_distribution == "Ubuntu" and ansible_os_family == "Debian" )
+
+   - name: Install epel-release package in CentOs server
+     yum: name=epel-release state=present
+     when: ( ansible_distribution == "CentOS" and ansible_os_family == "RedHat" )
+
+   - name: Install nginx in CentOs server
+     yum: name=nginx state=present
+     when: ( ansible_distribution == "CentOS" and ansible_os_family == "RedHat" )
+
+   - name: Create the web root folder
+     shell: "mkdir -p /var/html"
+
+   - name: Modify the web root folder permision
+     shell: "chmod 777 /var/html"
+
+   - name: Configure nginx web root folder in Ubuntu
+     copy: src=default_ubuntu dest=/etc/nginx/sites-available/default
+     when: ( ansible_distribution == "Ubuntu" and ansible_os_family == "Debian" )
+     notify:
+       - Restart nginx server in Ubuntu
+
+   - name: Configure nginx web root folder in CentOS
+     copy: src=centos.conf dest=/etc/nginx/nginex.conf
+     when: ( ansible_distribution == "CentOS" and ansible_os_family == "RedHat" )
+     notify:
+      - Restart nginx server in CentOS
+
+   - name: Deploy web page in nginx server
+     template: src=index.html.j2 dest=/var/html/index.html
+     notify:
+      - Restart nginx server in CentOS
+      - Restart nginx server in Ubuntu
+
+  handlers:
+   - name: Restart nginx server in CentOS
+     service: name=nginx state=restarted
+
+   - name: Restart nginx server in Ubuntu
+     shell: "/etc/init.d/nginx restart"
+	 
+=======
+
+Files required to run Playbook - 9
+default_ubuntu
+index.html.j2
+centos.conf
+
+#ansible-playbook install_nginx.yml
+
+#ansible localhost -m setup | grep  ansible_distribution
+
+
+playbook -10 
+
+loop.yml
+
+- name: Demonstrates loops
+  hosts: localhost
+
+  tasks:
+   - name: Iterate through a loops
+     debug: msg="{{item}}}"
+     with_sequence: start=1 end=5
+	 
+==============
+Playbook 11 - Create the mulitple docker containers 
+
+#docker stop $(docker ps -q) && docker rm $(docker ps -aq)
+
+#yum instlal -y epel-release
+#yum install -y python-pip
+#pip install docker-py
+
+provision_containers.yml
+<<<<<<<<
+- name: Demonstrates spinning up new containers through playbooks
+  hosts: localhost
+
+  tasks:
+   - name: Start new docker ubuntu container
+     docker_container:
+      image: verizon/ansible-ubuntu
+      name: "ubuntu{{item}}"
+	  state: present
+      ports:
+       - "200{{item}}:22"
+       - "800{{item}}:80"
+     with_sequence: start=1 end=2
+
+   - name: Start new docker CentOs container
+     docker_container:
+      image: verizon/ansible-centos
+      name: "centos{{item}}"
+	  state: present
+      ports:
+       - "300{{item}}:22"
+       - "900{{item}}:80"
+     with_sequence: start=1 end=2
+>>>>>	 
+
+#ansible-playbook provision_containers.yml
+
+#docker ps
+
+Run the below help for the docker_container module
+
+ansible-doc docker_container
+
+====   ansible dictionary =====
+
+Contacts - ansible dictionary file
+
+my_contacts:
+  William:
+   name: william Robert C
+   mobile: 9884484504
+
+  James:
+   name: James
+   mobile: 123-2134-1344
+other_contacts:
+  William1:
+   name: william Robert C 2
+   mobile: 9884484504
+
+  James1:
+   name: James  2
+   mobile: 123-2134-1344
+
+   playbook -11
+   
+   contacts.yml
+   
+   
+- name: demonstrates reading varible from external varible file
+  #hosts: all
+  hosts: localhost
+  vars_files:
+    - contacts
+
+  tasks:
+   - name: print the contacts
+     debug: msg="Mobile number of {{item.value.name}} is {{item.value.mobile}}"
+     with_dict: "{{my_contacts}}"
+
+   - name: print the contacts
+     debug: msg="Mobile number of {{item.value.name}} is {{item.value.mobile}}"
+     with_dict: "{{other_contacts}}"
+	 
+#ansible-playbook contacts.yml	 
+https://docs.ansible.com/ansible/2.5/plugins/lookup/dict.html
+	 
+=====
+
+Day-4
+=====
+# docker system prune (removed the dangling data - ie containers stopped, volumes without containers and images with no containers). Even unused data, with -a option)
+
+docker container prune
+docker image prune
+docker network prune
+docker volume prune
+
+=== Muliple docker ===
+https://hub.docker.com/explore/
+
+#docker run --name some-mysql -e MYSQL_ROOT_PASSWORD=mysql -d mysql:5.7
+#docker run --name some-wordpress --link some-mysql:mysql -p 8080:80 -d wordpress
+
+http://192.168.20.59:8080
+
+
+======  Anisble vault ====
+https://docs.ansible.com/ansible/2.4/vault.html
+Contacts <dictionary file>
+
+my_contacts:
+  William:
+   name: william Robert C
+   mobile: 9884484504
+
+  James:
+   name: James
+   mobile: 123-2134-1344
+other_contacts:
+  William1:
+   name: william Robert C 2
+   mobile: 9884484504
+
+  James1:
+   name: James  2
+   mobile: 123-2134-1344
+
+encrypt a file:-
+   
+#ansible-vault encrypt contacts
+
+dcrypt the file
+#ansible-vault decrypt contacts
+
+edit the encrypted file 
+
+#ansible-vault  edit contacts
+
+Playbook -12
+
+- name: Demonstrates ansible-vault usage in playbooks
+  hosts: localhost
+  vars_files:
+   - contacts
+
+  tasks:
+   - name: print the contacts
+     debug: msg="Mobile number of {{item.value.name}} is {{item.value.mobile}}"
+     with_dict: "{{my_contacts}}"
+
+#ansible-playbook read_contacts.yml --ask-vault-pass
+#ansible-playbook read_contacts.yml  --vault-password-file .pass
+
+encrypt option 3
+
+#ansible-vault encrypt contacts --vault-password-file=/root/.ssh/id_rsa.pub
+#ansible-vault derypt contacts --vault-password-file=/root/.ssh/id_rsa.pub
+
+with playbook 
+
+#ansible-playbook read_contacts.yml  --vault-password-file=/root/.ssh/id_rsa.pub
+
+====
+
+===== Basics of python ====
+
+phthon - inerperteer and intractive 
+
+hello.py  -- File name
+
+#!/usr/bin/python
+
+print "hello python - Python 2"
+print ("Hello python!!!! - This is recommened")
+
+chmod 755 hello.py
+#./hello.py
+
+
+
+#docker port ubuntu1
+
+#docker port ubuntu1  22
+
+====Dynamic host inventory script====
+
+#dynamic_inventory.py
+#ping.yml
+
+#ansible -i dynamic_inventory.py all -m ping
+
+===== Cutom Module ==
+
+mkdir custom_module
+mkdir library
+cd library
+
+add your custom_module
+add.py
+cd ..
+
+write your playbook
+playbook.yml
+#ansible-playbook playbook.yml
+
+=====
+
+
