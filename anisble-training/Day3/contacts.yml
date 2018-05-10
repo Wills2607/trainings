@@ -1,0 +1,9 @@
+- name: demonstrates reading varible from external varible file
+  hosts: all
+  vars_files:
+    - contacts
+
+  tasks: 
+   - name: print the contacts
+     debug: msg="Mobile number of {{item.value.name}} is {items.value.mobile}}."
+     with_dict: "{{my_contacts}}"

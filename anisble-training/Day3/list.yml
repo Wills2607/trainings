@@ -1,0 +1,10 @@
+- name: Demonstrates use of list in ansible playbook
+  hosts: ubuntu
+  vars:
+    - packages:
+       - vim
+       - tree
+  tasks:
+   - name: Install list of software packages
+     apt: name="{{item}}" update_cache=yes state=present
+     with_items: "{{packages}}"
