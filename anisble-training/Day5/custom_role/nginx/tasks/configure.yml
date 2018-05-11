@@ -1,0 +1,14 @@
+---
+
+- name: Configure nginx server in ubuntu
+  copy: src=default_ubuntu dest=/etc/nginx/sites-available/default
+  when: ( ansible_distribution == "Ubuntu" and ansible_os_family == "Debian" )
+  notify: 
+   - Restart the nginx server in Ubuntu
+
+- name: Configure nginx server in CentOs
+  copy: src=default_centos.conf dest=/etc/nginx/conf.d/default.conf
+  when: ( ansible_distribution == "CentOS" and ansible_os_family == "RedHat" )
+  notify:
+   - Restart the nginx server in CentOs
+
