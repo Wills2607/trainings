@@ -3,7 +3,7 @@
   tasks:
    -name: Start ubuntu containers
     docker_container:
-       image: 
+       image: verizon/absible-ubuntu 
        name: "ubuntu{{item}}"
        state: present
        ports: 
@@ -14,7 +14,7 @@
 
     - name: Start Centos Containers
       docker_container:
-        image:
+        image: verizon/absible-centos
         name: "Centos{{item}}"
         state: present
         ports:
