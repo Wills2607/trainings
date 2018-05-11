@@ -1,0 +1,38 @@
+- name: Manage nginx
+  hosts: all
+    tasks:
+     - name: Install nginx on Ubuntu
+       apt: name=nginx state=present update_cache=yes
+       when: ansible_distribution == "Ubuntu"
+
+     - name: Install epel release package 
+       yum: name=epel-release state=latest
+       when: ansible_distribution == "CentOs"
+
+     - name: Install nginx on CentOs
+       yum: name=nginx state=present
+       when: ansible_distribution == "CentOs"
+
+     - name: Create webroot 
+       shell: "mkdir -p /var/html && chmod 755 /var/html"
+       notify:
+        - Restart nginx server
+   
+     - name: Configure nginx on Ubuntu
+       copy: src=default_ubuntu dest=/etc/nginx/sit-available/default
+       when: ansible_distribution == "Ubuntu"
+       notify:
+        - Restart nginx server 
+
+     - name: Configure nginx on CentOs
+       copy: src=default_centos.conf dest=/etc/nginx/conf.d/default.conf
+       when: ansible_distribution == "CentOS"
+       notify:
+        - Restart nginx server 
+
+     - name: Deploy web page
+       template: src=index.html.j2 dest=/var/html/index.html 
+
+    handlers
+     - name: Restart nginx server 
+       command: service nginx restart

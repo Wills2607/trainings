@@ -1,0 +1,6 @@
+- name: Reading envionment varibles from playbook
+  hosts: localhost
+  tasks:
+   - name: Read and print environment varible 
+     debug: msg="{{lookup('env', 'JAVA_HOME')}}"
+   
